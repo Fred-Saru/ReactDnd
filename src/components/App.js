@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Browser from '../util/browser-identifier';
 
 class App extends React.Component {
   state = {
@@ -23,7 +24,14 @@ class App extends React.Component {
   };
 
   onDrop = (e, category) => {
-    let id = e.dataTransfert.getData('id');
+    let id;
+
+    if (Browser.isIE()) {
+      id = e.dataTransfer.getData('text');
+    } else {
+      id = id = e.dataTransfer.getData('id');
+    }
+
     let tasks = this.state.tasks.map((task) => {
       if (task.name === id) {
         task.category = category;
@@ -41,7 +49,11 @@ class App extends React.Component {
   };
 
   onDragStart = (e, id) => {
-    e.dataTransfert.setData('id', id);
+    if (Browser.isIE()) {
+      e.dataTransfer.setData('text', id);
+    } else {
+      e.dataTransfer.setData('id', id);
+    }
   };
 
   render() {
@@ -50,11 +62,12 @@ class App extends React.Component {
       completed: []
     };
 
-    this.state.tasks.map((t) => {
+    this.state.tasks.forEach((t) => {
       tasks[t.category].push(
         <div
           key={t.name}
           className="draggable"
+          draggable
           style={{ backgroundColor: t.bgcolor }}
           onDragStart={(e) => this.onDragStart(e, t.name)}
         >
@@ -66,7 +79,11 @@ class App extends React.Component {
     return (
       <div className="container-drag">
         <h2 className="header">Drag & Drop demo</h2>
-        <div className="wip">
+        <div
+          className="wip"
+          onDragOver={(e) => this.onDragOver(e)}
+          onDrop={(e) => this.onDrop(e, 'wip')}
+        >
           <span className="task-header">WIP</span>
           {tasks.wip}
         </div>
